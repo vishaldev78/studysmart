@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Smart Study Assistant AI" }],
   icons: {
-    icon: "/logo.svg",
+    icon: "",
   },
   openGraph: {
     title: "Smart Study Assistant AI",
