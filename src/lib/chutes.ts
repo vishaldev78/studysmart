@@ -3,13 +3,15 @@ import ZAI from 'z-ai-web-dev-sdk'
 /**
  * Unified LLM engine for Smart Study Assistant.
  *
- * Primary provider: Chutes LLM (https://llm.chutes.ai) — "core intelligence".
- * Fallback provider: in-house z-ai-web-dev-sdk (guarantees the app keeps
- * working even when the Chutes account has no balance / quota).
+ * Provider priority (first one that works wins):
+ *   1. Chutes LLM  — the "core intelligence" per the PRD (needs CHUTES_API_KEY)
+ *   2. Groq        — FREE, fast, OpenAI-compatible fallback that works on any
+ *                    local machine (needs GROQ_API_KEY from console.groq.com)
+ *   3. z-ai SDK    — only works inside the Z.ai cloud sandbox (no setup needed)
  *
- * Both providers expose an OpenAI-compatible chat-completions interface, so the
- * rest of the app only talks to `generate()` and gets back a string + the
- * engine that actually produced it.
+ * All three expose an OpenAI-compatible chat-completions interface, so the rest
+ * of the app only talks to `generate()` and gets back a string + the engine
+ * that actually produced it.
  */
 
 export type ChatMessage = {
@@ -19,9 +21,10 @@ export type ChatMessage = {
 
 export type LLMResult = {
   content: string
-  engine: 'chutes' | 'zai'
+  engine: 'chutes' | 'groq' | 'zai'
 }
 
+/* ------------------------------------------------------------------ Chutes */
 const CHUTES_API_KEY = process.env.CHUTES_API_KEY
 const CHUTES_ENDPOINT = 'https://llm.chutes.ai/v1/chat/completions'
 const CHUTES_MODEL = process.env.CHUTES_MODEL || 'deepseek-ai/DeepSeek-V3.2-TEE'
@@ -74,6 +77,49 @@ async function callChutes(messages: ChatMessage[]): Promise<string> {
   }
 }
 
+/* -------------------------------------------------------------------- Groq */
+const GROQ_API_KEY = process.env.GROQ_API_KEY
+const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'
+const GROQ_TIMEOUT_MS = 30000
+
+async function callGroq(messages: ChatMessage[]): Promise<string> {
+  if (!GROQ_API_KEY) throw new Error('GROQ_API_KEY not configured')
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), GROQ_TIMEOUT_MS)
+
+  try {
+    const res = await fetch(GROQ_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${GROQ_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        messages,
+        temperature: 0.4,
+        max_tokens: 2048,
+      }),
+      signal: controller.signal,
+    })
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '')
+      throw new Error(`Groq HTTP ${res.status}: ${text.slice(0, 160)}`)
+    }
+
+    const data = await res.json()
+    const content: string | undefined = data?.choices?.[0]?.message?.content
+    if (!content || !content.trim()) throw new Error('Groq returned empty content')
+    return content
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+/* --------------------------------------------------------------- z-ai SDK */
 let zaiPromise: Promise<unknown> | null = null
 async function getZai() {
   if (!zaiPromise) zaiPromise = ZAI.create()
@@ -95,18 +141,49 @@ async function callZai(messages: ChatMessage[]): Promise<string> {
   return content
 }
 
+/* ----------------------------------------------------------- Main entrypoint */
 /**
- * Run a chat completion. Tries Chutes first, falls back to z-ai.
+ * Run a chat completion. Tries Chutes → Groq → z-ai (in that order).
+ * Throws a helpful, user-facing error if every provider is unavailable.
  */
 export async function generate(messages: ChatMessage[]): Promise<LLMResult> {
+  const errors: string[] = []
+
+  // 1. Chutes (core intelligence per PRD)
   try {
     const content = await callChutes(messages)
     return { content, engine: 'chutes' }
   } catch (err) {
-    console.warn('[llm] Chutes failed, falling back to z-ai:', (err as Error).message)
+    errors.push(`Chutes: ${(err as Error).message}`)
+    console.warn('[llm] Chutes failed:', (err as Error).message)
+  }
+
+  // 2. Groq (free local fallback)
+  try {
+    const content = await callGroq(messages)
+    return { content, engine: 'groq' }
+  } catch (err) {
+    errors.push(`Groq: ${(err as Error).message}`)
+    console.warn('[llm] Groq failed:', (err as Error).message)
+  }
+
+  // 3. z-ai SDK (sandbox only — will throw on local machines, that's fine)
+  try {
     const content = await callZai(messages)
     return { content, engine: 'zai' }
+  } catch (err) {
+    errors.push(`z-ai: ${(err as Error).message}`)
+    console.warn('[llm] z-ai failed:', (err as Error).message)
   }
+
+  // Nothing worked — give the user a clear, actionable message.
+  throw new Error(
+    'AI service unavailable. ' +
+      (GROQ_API_KEY
+        ? 'Check your GROQ_API_KEY.'
+        : 'No working LLM provider found. For free local use, get a GROQ_API_KEY from https://console.groq.com/keys and add it to your .env file.') +
+      ` (Details: ${errors.join(' | ')})`
+  )
 }
 
 /**
