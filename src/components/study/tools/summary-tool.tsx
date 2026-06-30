@@ -70,18 +70,18 @@ export function SummaryTool({
 
       {result && !loading && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-          <Card className="overflow-hidden">
-            <CardHeader className="flex flex-row items-start justify-between gap-2">
-              <div>
+          <Card className="flex h-[500px] flex-col overflow-hidden">
+            <CardHeader className="flex flex-row items-start justify-between gap-2 border-b shrink-0">
+              <div className="min-w-0">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Topic</p>
-                <CardTitle className="text-xl">{result.topic}</CardTitle>
+                <CardTitle className="truncate text-xl">{result.topic}</CardTitle>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-2">
                 <EngineBadge engine={result.engine} />
                 <CopyButton text={plain} label="Copy" />
               </div>
             </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="ssa-scroll min-h-0 flex-1 space-y-5 overflow-y-auto">
               <section>
                 <h3 className="mb-1.5 flex items-center gap-2 text-sm font-semibold">
                   <BookOpen className="size-4 text-primary" /> Summary
