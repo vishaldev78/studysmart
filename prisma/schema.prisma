@@ -1,0 +1,35 @@
+// Smart Study Assistant AI — Prisma schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// A student (simple name + age login, no password)
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  age       Int
+  createdAt DateTime @default(now())
+  history   History[]
+}
+
+/// Saved AI generations per user
+model History {
+  id        String   @id @default(cuid())
+  userId    String
+  tool      String   // summary | quiz | answer | flashcards | study-plan
+  title     String   // short label for the item
+  inputText String   // the source notes/question
+  output    String   // JSON string of the generated result
+  engine    String?  // chutes | zai
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
