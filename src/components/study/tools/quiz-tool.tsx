@@ -115,7 +115,7 @@ export function QuizTool({
             <Button
               onClick={run}
               disabled={loading || notes.trim().length < 20}
-              className="ml-auto"
+              className="w-full sm:ml-auto sm:w-auto"
             >
               <Sparkles className="size-4" />
               {loading ? 'Generating…' : 'Generate Quiz'}

@@ -105,7 +105,7 @@ export function StudyPlanTool() {
               className="min-h-[80px]"
             />
           </div>
-          <Button onClick={run} disabled={loading || subject.trim().length < 2}>
+          <Button onClick={run} disabled={loading || subject.trim().length < 2} className="w-full sm:w-auto">
             <Sparkles className="size-4" />
             {loading ? 'Planning…' : 'Generate Study Plan'}
           </Button>

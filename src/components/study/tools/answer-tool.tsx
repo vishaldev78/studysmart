@@ -82,7 +82,7 @@ export function AnswerTool() {
               ))}
             </ToggleGroup>
           </div>
-          <Button onClick={run} disabled={loading || question.trim().length < 3}>
+          <Button onClick={run} disabled={loading || question.trim().length < 3} className="w-full sm:w-auto">
             <Sparkles className="size-4" />
             {loading ? 'Writing answer…' : 'Generate Answer'}
           </Button>

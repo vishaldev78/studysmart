@@ -79,7 +79,7 @@ export function FlashcardTool({
                 ))}
               </ToggleGroup>
             </div>
-            <Button onClick={run} disabled={loading || notes.trim().length < 20} className="ml-auto">
+            <Button onClick={run} disabled={loading || notes.trim().length < 20} className="w-full sm:ml-auto sm:w-auto">
               <Sparkles className="size-4" />
               {loading ? 'Generating…' : 'Generate Flashcards'}
             </Button>

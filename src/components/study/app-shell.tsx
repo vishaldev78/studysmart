@@ -190,7 +190,7 @@ export function AppShell({ user, onLogout }: { user: User; onLogout: () => void 
         </AnimatePresence>
 
         {/* Main content */}
-        <main className="min-w-0 flex-1 py-6 lg:py-8">
+        <main className="min-w-0 flex-1 px-4 py-6 pb-24 lg:px-0 lg:py-8 lg:pb-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={active}
@@ -198,7 +198,6 @@ export function AppShell({ user, onLogout }: { user: User; onLogout: () => void 
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.18 }}
-              className="px-4 lg:px-0"
             >
               {active === 'summary' && <SummaryTool notes={notes} setNotes={setNotes} />}
               {active === 'quiz' && <QuizTool notes={notes} setNotes={setNotes} />}
@@ -212,7 +211,10 @@ export function AppShell({ user, onLogout }: { user: User; onLogout: () => void 
       </div>
 
       {/* Mobile bottom tab bar */}
-      <nav className="sticky bottom-0 z-30 flex items-center justify-around border-t bg-background/95 backdrop-blur lg:hidden">
+      <nav
+        className="sticky bottom-0 z-30 flex items-center justify-around border-t bg-background/95 backdrop-blur lg:hidden"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
         {NAV.map((item) => {
           const Icon = item.icon
           const isActive = active === item.id

@@ -70,7 +70,7 @@ export function SummaryTool({
 
       {result && !loading && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-          <Card className="flex h-[500px] flex-col overflow-hidden">
+          <Card className="flex h-[440px] flex-col overflow-hidden sm:h-[500px]">
             <CardHeader className="flex flex-row items-start justify-between gap-2 border-b shrink-0">
               <div className="min-w-0">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Topic</p>

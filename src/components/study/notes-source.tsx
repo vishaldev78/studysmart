@@ -18,11 +18,9 @@ type SourceMeta = { label: string; tone: 'pdf' | 'image' | 'sample' | 'text' } |
 export function NotesSource({
   value,
   onChange,
-  minHeight = 220,
 }: {
   value: string
   onChange: (v: string) => void
-  minHeight?: number
 }) {
   const pdfRef = useRef<HTMLInputElement>(null)
   const imgRef = useRef<HTMLInputElement>(null)
@@ -144,8 +142,7 @@ export function NotesSource({
           if (meta && meta.tone !== 'text') setMeta(null)
         }}
         placeholder="Paste your notes here, upload a PDF, or upload a photo of your notes…"
-        className="ssa-scroll resize-y bg-background text-sm leading-relaxed"
-        style={{ minHeight }}
+        className="ssa-scroll h-44 resize-none bg-background text-sm leading-relaxed sm:h-52"
       />
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>{meta ? `Source: ${meta.label}` : 'Paste text, upload a PDF or an image'}</span>
