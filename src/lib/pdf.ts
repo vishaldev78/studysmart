@@ -1,7 +1,7 @@
 import { extractText, getDocumentProxy } from 'unpdf'
 
 /** Maximum number of PDF pages we will read (keeps parsing fast & cheap). */
-export const MAX_PDF_PAGES = 5
+export const MAX_PDF_PAGES = 10
 
 /**
  * Extract plain text from a PDF file (Buffer), reading at most MAX_PDF_PAGES
